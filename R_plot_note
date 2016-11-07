@@ -1,3 +1,6 @@
 
 
 plot(density(age,bw="SJ"))
+
+ggplot  -->coord_cartesian
+設定y軸範圍
