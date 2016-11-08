@@ -3,4 +3,18 @@
 plot(density(age,bw="SJ"))
 
 ggplot  -->coord_cartesian
-設定y軸範圍
+#設定y軸範圍
+
+#互動式圖表
+require(googleVis)
+require(reshape2)
+require(dplyr)
+
+plot(gvisBarChart(dat))
+
+dcast(dat1,race~sex) %>% gvisBarChart() %>% plot()
+select(hsb,read,math) %>% gvisScatterChart() %>% plot()
+gvisOrgChart(Regions) %>% plot
+
+
+ggplot-->ggmap
