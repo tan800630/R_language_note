@@ -1,4 +1,4 @@
-
+readLines(file(power_path, encoding = "BIG-5"), n = 10)
 
 plot(density(age,bw="SJ"))
 
