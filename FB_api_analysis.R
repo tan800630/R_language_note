@@ -8,8 +8,12 @@ start_date <- "2016/01/01"
 end_date <- "2017/04/14"
 
 page.id <- "DoctorKoWJ"
+page.id2 <-"pxmartchannel"
+
 page <- getPage(page.id,token=fb.oauth,n=1000,since=start_date,until=end_date)
 str(page)
+
+page2 <- getPage(page.id2,token=fb.oauth,n=1000,since=start_date,until=end_date)
 
 
 ## convert Facebook date format to R date format
@@ -33,9 +37,9 @@ time_last <-function(post_id){
 
 #存檔
 time_data=data.frame()
-for(i in 1:291){time_data=rbind(time_data,time_last(page$id[i]))
+for(i in 1:800){time_data=rbind(time_data,time_last(page2$id[i]))
 }
-time_data=data.frame(time_data,page[,9:11])
+time_data=data.frame(time_data,page2[,9:11])
 save(time_data,file="C:/Users/tan/Documents/data/time_data0422.RData")
 
 load("C:/Users/tan/Documents/data/time_data0422.RData")
