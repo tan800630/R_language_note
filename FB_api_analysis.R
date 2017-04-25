@@ -1,20 +1,7 @@
-ï»¿
-require("Rfacebook")
+require(dplyr)
 
-#é€™é‚Šæ˜¯ç”¨æˆ‘çš„fb.oauthç›´æ¥æˆæ¬Šçš„ï¼Œç”¨tokençš„äººè¦è¨˜å¾—æ”¹ä¸€ä¸‹"token=fb.oauth"é€™æ®µ
-#token="#your facebook API token#"
 
-start_date <- "2016/01/01"
-end_date <- "2017/04/14"
-
-page.id <- "DoctorKoWJ"
-page.id2 <-"pxmartchannel"
-
-page <- getPage(page.id,token=fb.oauth,n=1000,since=start_date,until=end_date)
-str(page)
-
-page2 <- getPage(page.id2,token=fb.oauth,n=1000,since=start_date,until=end_date)
-
+load("C:\Users\tan\Documents\data\FBpage.RData")
 
 ## convert Facebook date format to R date format
 format.facebook.date <- function(datestring) {
@@ -22,7 +9,7 @@ format.facebook.date <- function(datestring) {
 }
 
 ############################
-#çœ‹æ¯ä¸€ç¯‡æ–‡ç« çš„ç•™è¨€æŒçºŒç¨‹åº¦
+#¬İ¨C¤@½g¤å³¹ªº¯d¨¥«ùÄòµ{«×
 time_last <-function(post_id){
 	post=getPost(post_id,token=fb.oauth,likes=F,n=10000)
 	s_time=format.facebook.date(post$post$created_time)
@@ -31,83 +18,89 @@ time_last <-function(post_id){
 	a=as.numeric(time_box)
 	data.frame("id"=post_id,"time"=s_time,
 		"m_post"=mean(a),"s_post"=sd(a),
-		"md_post"=median(a))
+		"md_post"=median(a),"ninty_post"=if(dim(post$comments)[1]>9)
+		{sort(a)[floor(length(a)*0.9)]}else{0})
 }
 
 
-#å­˜æª”
+#¦sÀÉ
 time_data=data.frame()
-for(i in 1:800){time_data=rbind(time_data,time_last(page2$id[i]))
+for(i in 1:769){time_data=rbind(time_data,time_last(page3$id[i]))
 }
-time_data=data.frame(time_data,page2[,9:11])
-save(time_data,file="C:/Users/tan/Documents/data/time_data0422.RData")
+time_data=data.frame(time_data,page3[,9:11])
+#save(time_data_KoWJ,time_data_pxmart,page,page2,
+#	file="C:/Users/tan/Documents/data/FBdata.RData")
 
-load("C:/Users/tan/Documents/data/time_data0422.RData")
+load("C:/Users/tan/Documents/data/FBdata.RData")
 
 
 ##data manipulation
 
-#æœ‰ä¸€å‰‡poæ–‡æ²’æœ‰comments
-#å¾ŒçºŒå¯ä»¥ç¨å¾®çœ‹ä¸€ä¸‹	id="136845026417486_820610521374263"
+#¼W¥[¦~¤ëªºÄæ¦ì
+time_data$YM=as.factor(format(time_data$time,"%Y-%m"))
+
+
+#§R°£¨S¦³¯d¨¥ªº¸ê®Æ
+#KoWJ«áÄò¥i¥Hµy·L¬İ¤@¤U	id="136845026417486_820610521374263"
 time_data=time_data[-which(is.na(time_data$s_post)),]
 
 #histogram
 par(mfrow=c(3,3))
-for(i in 3:8){hist(time_data[,i],main=colnames(time_data)[i])}
+for(i in 3:9){hist(time_data[,i],main=colnames(time_data)[i])}
 
-#æ”¹å–log
+#§ï¨úlog
 par(mfrow=c(3,3))
-for(i in 3:8){hist(log(time_data[,i]),
+for(i in 3:9){hist(log(time_data[,i]),
 	main=paste0("log_",colnames(time_data)[i]))}
 
-#å–å®Œlogå¾Œçš„boxplot
-boxplot(log(time_data[,-c(1,2)]))
+#¨ú§¹log«áªºboxplot
+boxplot(log(time_data[,3:9]))
 
 #x-y plot
-pairs(time_data[,-c(1,2)])
+pairs(time_data[,5:9])
 
-pairs(log(time_data[,5:8]))
+pairs(log(time_data[time_data$shares_count!=0,5:9]))
+
+cor(log(time_data[time_data$shares_count!=0,5:9]))
+
+#PO¤å¤ë¥÷¤À¥¬
+plot(table(time_data$YM))
 
 
-#æ–°çš„è³‡æ–™ç”¨logå»åˆ†æ
-t_dat=time_data
+
+#·sªº¸ê®Æ¥Îlog¥h¤ÀªR
+#¨úlog­nª`·N­ì¥»¬O0ªº¼Æ­È·|ÅÜ¦¨­tµL­­¤j
+t_dat=time_data[time_data$ninty_post!=0,]
 t_dat[,3:8]=log(t_dat[,3:8])
 
 ##analysis
 
-#poæ–‡æ™‚é–“èˆ‡ç•™è¨€æŒçºŒæ™‚é–“çš„é—œä¿‚
-plot(as.Date(t_dat$time),t_dat$md_post)
+#po¤å®É¶¡»P¯d¨¥«ùÄò®É¶¡ªºÃö«Y
+plot_data=as.data.frame(t_dat %>% group_by(YM) %>%
+	summarise(md=mean(md_post),ninty=mean(ninty_post),likes=mean(likes_count),
+	comments=mean(comments_count),shares=mean(shares_count),
+	num=length(shares_count)))
+
+#¾ãÅé¦Ó¨¥¡A¥­§¡¨C¤ë«öÆg¼Æ¶q¤U­°´T«×©úÅã-Ko
+par(mfrow=c(2,3))
+plot(plot_data[,c(1,2)],type="n",main="¯d¨¥«ùÄò®É¶¡-50%")
+plot(plot_data[,c(1,3)],type="n",main="¯d¨¥«ùÄò®É¶¡-90%")
+plot(plot_data[,c(1,4)],type="n",ylim=c(0,90000),main="likes")
+plot(plot_data[,c(1,5)],type="n",ylim=c(0,2000),main="¯d¨¥¼Æ¶q")
+plot(plot_data[,c(1,6)],type="n",ylim=c(0,1400),main="¤À¨É¼Æ¶q")
+plot(plot_data[,c(1,7)],type="n",ylim=c(0,35),main="¤å³¹¼Æ¶q")
+
+
+#»İ­n§ó¦h¤ë¥÷¤~¯à¬İ¥X¦nÁÍ¶Õ
+cor(plot_data[,-1])
+pairs(plot_data[,-1])
+
+#¯d¨¥«ùÄò³Ì¤[ªº¤å³¹«e¤­¦W
+id=time_data[order(time_data$ninty_post,decreasing=T)[1:5],]$id
+page[page$id%in%id,]
 
 
 
-
-##################
-##é‡å°æŒ‰è®šè·Ÿç•™è¨€è€…åšåˆ†æ
-####
-com=data.frame()
-lik=data.frame()
-
-for(i in 1:dim(page)[1]){
-	post=getPost(page$id[i],token,likes=F,n=10000)
-	com=rbind(com,post$comments)    #è¦å†å¾€ä¸‹æŒ–-> getCommentReplies
-	#lik=rbind(lik,post$likes)
-}
-
-#count_lik=as.data.frame(table(lik$from_id))
-count_com=as.data.frame(table(com$from_id))
-
-#æ’åºè®šæ•¸
-count_lik=count_lik[order(count_lik$Freq,decreasing=T),]
-#è®šæ˜¯èª°
-#lik[which(lik$from_id=="380194235462302")[1],1:2]
-
-#ç•™è¨€æœ€å¤š
-count_com=count_com[order(count_com$Freq,decreasing=T),]
-
-
-
-#çœ‹ç¬¬ä¸€åç•™è¨€è€…çš„ç•™è¨€æ—¥æœŸ
-tim=com[com$from_id==count_com$Var1[1],]$created_time
-tim=format.facebook.date(tim)
-hist(tim,breaks=100,freq=T)
+### format(time,"%Y-%m")
+### unclass(as.POSIXlt(time))
 
