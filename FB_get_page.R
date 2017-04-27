@@ -48,4 +48,13 @@ str(page)
 
 page2 <- getPage(page.id2,token=fb.oauth,n=1000,since=start_date,until=end_date)
 page3 <- getPage(page.id3,token=fb.oauth,n=1000,since=start_date,until=end_date)
->>>>>>> d4acb71181408beecceb1aa454c2a44ca8017a8e
+
+
+#####  Àx¦spostÀÉ®×  KoWJ
+
+for(i in 1:dim(page)[1]){
+	post=getPost(page$id[i],token=fb.oauth,likes=T,reactions=F,
+	n=max(page$likes_count))
+	save(post,file=paste0("C:/Users/tan/Documents/data/KoWJ/",
+	strsplit(post$post$id,"_")[[1]][2],".RData"))
+	}
