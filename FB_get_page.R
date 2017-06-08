@@ -32,8 +32,10 @@ require("Rfacebook")
 #這邊是用我的fb.oauth直接授權的，用token的人要記得改一下"token=fb.oauth"這段
 #token="#your facebook API token#"
 
-start_date <- "2016/01/01"
-end_date <- "2017/04/14"
+
+
+start_date <- "2013/01/01"
+end_date <- "2013/12/31"
 
 page.id <- "DoctorKoWJ"
 page.id2 <-"pxmartchannel"
